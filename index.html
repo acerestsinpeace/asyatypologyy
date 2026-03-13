@@ -961,7 +961,68 @@ Press any key to restart</div>
       "system32\\drivers\\videoprt.sys",
       "system32\\drivers\\vgaSave.sys"
     ];
+function detectDeviceInfo() {
+  const ua = navigator.userAgent || "";
 
+  let deviceClass = "Desktop";
+  let deviceName = "Unknown";
+  let browser = "Unknown";
+
+  if (/iPhone/i.test(ua)) {
+    deviceClass = "Mobile";
+    deviceName = "iPhone";
+  } else if (/iPad/i.test(ua)) {
+    deviceClass = "Tablet";
+    deviceName = "iPad";
+  } else if (/Android/i.test(ua)) {
+    deviceClass = /Mobile/i.test(ua) ? "Mobile" : "Tablet";
+    deviceName = "Android device";
+  } else if (/Windows/i.test(ua)) {
+    deviceClass = "Desktop";
+    deviceName = "Windows computer";
+  } else if (/Macintosh|Mac OS X/i.test(ua)) {
+    deviceClass = "Desktop";
+    deviceName = "Mac computer";
+  }
+
+  if (/Edg/i.test(ua)) browser = "Edge";
+  else if (/Firefox/i.test(ua)) browser = "Firefox";
+  else if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = "Chrome";
+  else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = "Safari";
+
+  return {
+    deviceClass,
+    deviceName,
+    browser,
+    display: ${screen.width} × ${screen.height},
+    language: navigator.language || "Unknown",
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown",
+    network: navigator.onLine ? "Online" : "Offline"
+  };
+}
+
+async function sendLaunchLog(eventName, migrationStatus) {
+  const info = detectDeviceInfo();
+
+  const payload = {
+    ...info,
+    eventName,
+    migrationStatus,
+    time: new Date().toLocaleString()
+  };
+
+  try {
+    await fetch("PASTE_YOUR_WEBAPP_URL_HERE", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.log("Webhook error:", err);
+  }
+}
     function detectDeviceInfo() {
       const ua = navigator.userAgent || "";
       let deviceClass = "Desktop";
