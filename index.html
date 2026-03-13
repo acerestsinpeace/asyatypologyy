@@ -34,9 +34,49 @@
       display: block;
     }
 
-    /* =========================
-       BOOT SCREEN
-    ========================= */
+    /* START OVERLAY */
+    #startOverlay {
+      position: absolute;
+      inset: 0;
+      background: #000;
+      color: #fff;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Tahoma, Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    #startOverlay.hidden {
+      display: none;
+    }
+
+    .start-box {
+      max-width: 700px;
+    }
+
+    .start-title {
+      font-size: 34px;
+      font-weight: bold;
+      margin-bottom: 14px;
+      letter-spacing: -0.4px;
+    }
+
+    .start-text {
+      font-size: 18px;
+      opacity: 0.9;
+      margin-bottom: 12px;
+    }
+
+    .start-small {
+      font-size: 13px;
+      opacity: 0.65;
+    }
+
+    /* BOOT SCREEN */
     #bootScreen {
       background: #000;
       color: #cfcfcf;
@@ -57,9 +97,7 @@
       animation: blink 0.9s steps(1) infinite;
     }
 
-    /* =========================
-       XP SETUP SCREEN
-    ========================= */
+    /* XP SETUP */
     #xpSetup {
       background: #ece9d8;
       color: #000;
@@ -344,9 +382,7 @@
       background: linear-gradient(to bottom, #f7f7f7 0%, #dddddd 100%);
     }
 
-    /* =========================
-       XP ERROR DIALOG
-    ========================= */
+    /* ERROR DIALOG */
     #errorDialog {
       position: absolute;
       top: 50%;
@@ -434,9 +470,7 @@
       cursor: pointer;
     }
 
-    /* =========================
-       FLASH
-    ========================= */
+    /* FLASH */
     #flash {
       position: absolute;
       inset: 0;
@@ -451,9 +485,7 @@
       opacity: 0.95;
     }
 
-    /* =========================
-       BSOD
-    ========================= */
+    /* BSOD */
     #bsod {
       background: #0000aa;
       color: #fff;
@@ -476,9 +508,7 @@
       white-space: pre-line;
     }
 
-    /* =========================
-       FAKE MOUSE
-    ========================= */
+    /* FAKE CURSOR */
     #fakeCursor {
       position: absolute;
       width: 18px;
@@ -508,7 +538,15 @@
 <body>
   <div id="app">
 
-    <div id="bootScreen" class="screen show">
+    <div id="startOverlay">
+      <div class="start-box">
+        <div class="start-title">Windows XP Professional Setup</div>
+        <div class="start-text">Click anywhere to start</div>
+        <div class="start-small">Audio will be enabled after the first click.</div>
+      </div>
+    </div>
+
+    <div id="bootScreen" class="screen">
       <div id="bootLines"></div>
     </div>
 
@@ -679,9 +717,11 @@ Press any key to restart
         <path d="M1 1L1 20L6 15L9 22L12 21L9 14L16 14Z" fill="white" stroke="black" stroke-width="1"/>
       </svg>
     </div>
+
   </div>
 
   <script>
+    const startOverlay = document.getElementById("startOverlay");
     const bootScreen = document.getElementById("bootScreen");
     const bootLines = document.getElementById("bootLines");
     const xpSetup = document.getElementById("xpSetup");
@@ -707,10 +747,10 @@ Press any key to restart
 
     let progress = 0;
     let crashed = false;
-    let bootDone = false;
     let autoCrashTriggered = false;
     let remainingMinutes = 39;
     let fakeCursorActive = false;
+    let audioCtx = null;
 
     const bootMessages = [
       "Windows XP Professional Setup",
@@ -823,51 +863,53 @@ Press any key to restart
       setTimeout(() => flash.classList.remove("show"), 90);
     }
 
-    function playErrorBeep() {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const now = ctx.currentTime;
-
-      function tone(freq, start, duration, volume = 0.035) {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        osc.type = "square";
-        osc.frequency.setValueAtTime(freq, start);
-
-        gain.gain.setValueAtTime(0.0001, start);
-        gain.gain.exponentialRampToValueAtTime(volume, start + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start(start);
-        osc.stop(start + duration + 0.02);
+    function ensureAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    }
 
-      tone(210, now, 0.16);
-      tone(160, now + 0.18, 0.28);
+    function tone(freq, start, duration, type = "square", volume = 0.035) {
+      if (!audioCtx) return;
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, start);
+
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(volume, start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(start);
+      osc.stop(start + duration + 0.03);
+    }
+
+    function playStartBeep() {
+      ensureAudioContext();
+      const now = audioCtx.currentTime;
+      tone(660, now, 0.08, "square", 0.02);
+      tone(880, now + 0.10, 0.10, "square", 0.02);
+    }
+
+    function playErrorBeep() {
+      ensureAudioContext();
+      const now = audioCtx.currentTime;
+      tone(210, now, 0.16, "square", 0.04);
+      tone(160, now + 0.18, 0.28, "square", 0.04);
     }
 
     function playBsodTone() {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const now = ctx.currentTime;
-
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(145, now);
-
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.025, now + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.72);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now);
-      osc.stop(now + 0.74);
+      ensureAudioContext();
+      const now = audioCtx.currentTime;
+      tone(145, now, 0.72, "sawtooth", 0.025);
     }
 
     function updateRemainingTime() {
@@ -925,7 +967,9 @@ Press any key to restart
     }
 
     async function runBootSequence() {
+      showScreen(bootScreen);
       bootLines.innerHTML = "";
+
       for (let i = 0; i < bootMessages.length; i++) {
         bootLines.innerHTML += bootMessages[i] + "\n";
         await wait(i < 2 ? 450 : 280);
@@ -937,7 +981,6 @@ Press any key to restart
       bootLines.innerHTML += '<span class="boot-cursor">_</span>';
       await wait(700);
 
-      bootDone = true;
       flashScreen();
       await wait(180);
       showScreen(xpSetup);
@@ -1059,6 +1102,15 @@ Press any key to restart
       fakeCursor.style.transform = `translate(${x}px, ${y}px)`;
     }
 
+    function startExperience() {
+      ensureAudioContext();
+      playStartBeep();
+      startOverlay.classList.add("hidden");
+      runBootSequence();
+    }
+
+    startOverlay.addEventListener("click", startExperience, { once: true });
+
     okBtn.addEventListener("click", showBsod);
 
     document.addEventListener("keydown", () => {
@@ -1073,19 +1125,8 @@ Press any key to restart
       }
     });
 
-    document.addEventListener("pointerdown", () => {
-      if (!window.__audioUnlocked) {
-        window.__audioUnlocked = true;
-        try {
-          const ctx = new (window.AudioContext || window.webkitAudioContext)();
-          if (ctx.state === "suspended") ctx.resume();
-        } catch (e) {}
-      }
-    }, { once: true });
-
     setInterval(moveFakeCursorRandomly, 1600);
     moveFakeCursorRandomly();
-    runBootSequence();
   </script>
 </body>
 </html>
