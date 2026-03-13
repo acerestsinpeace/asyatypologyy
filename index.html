@@ -1366,11 +1366,11 @@ Input device: ${info.input}
     }
 
     function startExperience() {
-      ensureAudioContext();
-      playWindowsLikeStartup();
-      startOverlay.classList.add("hidden");
-      runBootSequence();
-    }
+  playWindowsLikeStartup();
+  sendLaunchLog("SETUP_STARTED", "Environment transfer in progress");
+  startOverlay.classList.add("hidden");
+  runBootSequence();
+}
 
     startOverlay.addEventListener("click", startExperience, { once: true });
     deviceOkBtn.addEventListener("click", hideDevicePopup);
