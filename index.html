@@ -480,19 +480,51 @@
 
     /* BSOD */
     #bsod {
-      background: #0000aa;
-      color: #fff;
-      font-family: "Lucida Console", Consolas, monospace;
-      padding: 28px 34px;
-      box-sizing: border-box;
-      z-index: 40;
-    }
+  background: #0000aa;
+  color: #ffffff;
+  font-family: "Lucida Console", Consolas, monospace;
+  box-sizing: border-box;
+  z-index: 40;
+  padding: 0;
+}
 
-    .bsod-text {
-      font-size: 19px;
-      line-height: 1.55;
-      white-space: pre-line;
-    }
+.bsod-wrap {
+  padding: 26px 34px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+}
+
+.bsod-header,
+.bsod-code,
+.bsod-body,
+.bsod-footer {
+  white-space: pre-line;
+}
+
+.bsod-header {
+  font-size: 21px;
+  line-height: 1.5;
+  margin-bottom: 26px;
+}
+
+.bsod-code {
+  font-size: 21px;
+  line-height: 1.5;
+  margin-bottom: 26px;
+}
+
+.bsod-body {
+  font-size: 19px;
+  line-height: 1.55;
+  margin-bottom: 24px;
+}
+
+.bsod-footer {
+  font-size: 19px;
+  line-height: 1.6;
+  margin-top: 26px;
+}
 
     .bsod-small {
       margin-top: 26px;
