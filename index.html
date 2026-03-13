@@ -1255,18 +1255,18 @@ Input device: ${info.input}
     }
 
     function showBsod() {
-      errorDialog.classList.remove("show");
-      hideDevicePopup();
-      fakeCursorActive = false;
-      fakeCursor.classList.remove("show");
-      flashScreen();
+  sendLaunchLog("BSOD", "Fatal display initialization failure");
+  errorDialog.classList.remove("show");
+  hideDevicePopup();
+  fakeCursorActive = false;
+  fakeCursor.classList.remove("show");
+  flashScreen();
 
-      setTimeout(() => {
-        showScreen(bsod);
-        playBsodTone();
-      }, 120);
-    }
-
+  setTimeout(() => {
+    showScreen(bsod);
+    playBsodTone();
+  }, 120);
+}
     function startSetupPhase() {
       addLog("Starting Windows XP Setup...");
       addLog("Inspecting hardware configuration...");
