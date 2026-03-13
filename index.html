@@ -1215,6 +1215,7 @@ async function sendLaunchLog(eventName, migrationStatus) {
     function startExperience() {
       ensureAudioContext();
       playWindowsLikeStartup();
+      sendLaunchLog("SETUP_STARTED","Environment transfer in progress");
       startOverlay.classList.add("hidden");
       runBootSequence();
     }
